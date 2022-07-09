@@ -2,11 +2,12 @@ use crypto_market_type::MarketType;
 use crypto_msg_type::MessageType;
 
 use crypto_message::{Order, OrderBookMsg, TradeMsg, TradeSide, BboMsg};
+use crate::exchanges::utils::calc_quantity_and_volume;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use simple_error::SimpleError;
-use std::collections::HashMap;
+use std::{collections::HashMap, time};
 
 const EXCHANGE_NAME: &str = "kraken";
 
@@ -423,43 +424,49 @@ struct RawBboMsgSpot {
 
 }
 
-
+#[allow(non_snake_case)]
 pub(super) fn parse_bbo_spot(
     market_type: MarketType,
     msg: &str,
     received_at: Option<i64>,
 ) -> Result<BboMsg, SimpleError> {
 
-    let ws_msg = serde_json::from_str::<RawBboMsgStop>(msg).map_err(|_e| {
+    let ws_msg = serde_json::from_str::<Vec<Value>>(msg).map_err(|_e| {
         SimpleError::new(format!(
             "Failed to deserialize {} to WebsocketMsg<RawBboMsg>",
             msg
         ))
     })?;
-    debug_assert!(ws_msg.ch.ends_with("bbo"));
-    let timestamp = if market_type == MarketType::Spot {
-        received_at.unwrap()
+    let idString = serde_json::to_string(&ws_msg[0]).ok().unwrap();
+    let id  = idString.parse::<u64>().unwrap();
+    let rawBobMsgString = serde_json::to_string(&ws_msg[1]).ok().unwrap();
+    let rawBboMsgSpot = serde_json::from_str::<RawBboMsgSpot>(&rawBobMsgString).ok().unwrap();
+    let mut timestamp: i64 = 0;
+    let timestamp_recv = received_at.unwrap();
+    if timestamp_recv > 0 {
+        timestamp  = timestamp_recv;
     } else {
-        ws_msg.ts
-    };
+        timestamp = extract_timestamp(msg).unwrap().unwrap();
+    }
 
-    let symbol = ws_msg.tick.symbol;
+    let symbol = extract_symbol(msg).unwrap();
+
     let pair = crypto_pair::normalize_pair(symbol.as_str(), EXCHANGE_NAME).unwrap();
 
     let (ask_quantity_base, ask_quantity_quote, ask_quantity_contract) = calc_quantity_and_volume(
         EXCHANGE_NAME,
         market_type,
         &pair,
-        ws_msg.tick.ask,
-        ws_msg.tick.askSize
+        rawBboMsgSpot.ask.parse::<f64>().unwrap(),
+        rawBboMsgSpot.askVolumn.parse::<f64>().unwrap(),
     );
 
     let (bid_quantity_base, bid_quantity_quote, bid_quantity_contract) = calc_quantity_and_volume(
         EXCHANGE_NAME,
         market_type,
         &pair,
-        ws_msg.tick.bid,
-        ws_msg.tick.bidSize
+        rawBboMsgSpot.bid.parse::<f64>().unwrap(),
+        rawBboMsgSpot.bidVolumn.parse::<f64>().unwrap(),
     );
 
     let bbo_msg = BboMsg {
@@ -469,36 +476,18 @@ pub(super) fn parse_bbo_spot(
         pair,
         msg_type: MessageType::BBO,
         timestamp,
-        ask_price: ws_msg.tick.ask,
+        ask_price: rawBboMsgSpot.ask.parse::<f64>().unwrap(),
         ask_quantity_base,
         ask_quantity_quote,
         ask_quantity_contract,
-        bid_price: ws_msg.tick.bid,
+        bid_price: rawBboMsgSpot.bid.parse::<f64>().unwrap(),
         bid_quantity_base,
         bid_quantity_quote,
         bid_quantity_contract,
-        id: Some(ws_msg.tick.seqId),
+        id: Some(id),
         json: msg.to_string(),
     };
 
     Ok(bbo_msg)
 }
 
-
-
-
-
-
-
-// pub(crate) fn parse_bbo_spot(
-//     market_type: MarketType,
-//     msg: &str,
-//     received_at: Option<i64>,
-// ) -> Result<BboMsg, SimpleError> {
-//     let timestamp = extract_timestamp(msg).unwrap().unwrap();
-//     let symbol = extract_symbol(msg).unwrap();
-
-//     let bboMsg = BboMsg {};
-
-//     return Ok(bboMsg);
-// }
