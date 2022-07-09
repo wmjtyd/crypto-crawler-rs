@@ -1,7 +1,7 @@
 use crypto_market_type::MarketType;
 use crypto_msg_type::MessageType;
 
-use crypto_message::{Order, OrderBookMsg, TradeMsg, TradeSide};
+use crypto_message::{Order, OrderBookMsg, TradeMsg, TradeSide, BboMsg};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -410,3 +410,95 @@ pub(crate) fn parse_l2(msg: &str) -> Result<Vec<OrderBookMsg>, SimpleError> {
 
     Ok(orderbooks)
 }
+
+
+#[derive(Serialize, Deserialize)]
+#[allow(non_snake_case)]
+struct RawBboMsgSpot {
+    bid: String,
+    ask: String,
+    timestamp: String,
+    bidVolumn: String,
+    askVolumn: String,
+
+}
+
+
+pub(super) fn parse_bbo_spot(
+    market_type: MarketType,
+    msg: &str,
+    received_at: Option<i64>,
+) -> Result<BboMsg, SimpleError> {
+
+    let ws_msg = serde_json::from_str::<RawBboMsgStop>(msg).map_err(|_e| {
+        SimpleError::new(format!(
+            "Failed to deserialize {} to WebsocketMsg<RawBboMsg>",
+            msg
+        ))
+    })?;
+    debug_assert!(ws_msg.ch.ends_with("bbo"));
+    let timestamp = if market_type == MarketType::Spot {
+        received_at.unwrap()
+    } else {
+        ws_msg.ts
+    };
+
+    let symbol = ws_msg.tick.symbol;
+    let pair = crypto_pair::normalize_pair(symbol.as_str(), EXCHANGE_NAME).unwrap();
+
+    let (ask_quantity_base, ask_quantity_quote, ask_quantity_contract) = calc_quantity_and_volume(
+        EXCHANGE_NAME,
+        market_type,
+        &pair,
+        ws_msg.tick.ask,
+        ws_msg.tick.askSize
+    );
+
+    let (bid_quantity_base, bid_quantity_quote, bid_quantity_contract) = calc_quantity_and_volume(
+        EXCHANGE_NAME,
+        market_type,
+        &pair,
+        ws_msg.tick.bid,
+        ws_msg.tick.bidSize
+    );
+
+    let bbo_msg = BboMsg {
+        exchange: EXCHANGE_NAME.to_string(),
+        market_type,
+        symbol: symbol.to_string(),
+        pair,
+        msg_type: MessageType::BBO,
+        timestamp,
+        ask_price: ws_msg.tick.ask,
+        ask_quantity_base,
+        ask_quantity_quote,
+        ask_quantity_contract,
+        bid_price: ws_msg.tick.bid,
+        bid_quantity_base,
+        bid_quantity_quote,
+        bid_quantity_contract,
+        id: Some(ws_msg.tick.seqId),
+        json: msg.to_string(),
+    };
+
+    Ok(bbo_msg)
+}
+
+
+
+
+
+
+
+// pub(crate) fn parse_bbo_spot(
+//     market_type: MarketType,
+//     msg: &str,
+//     received_at: Option<i64>,
+// ) -> Result<BboMsg, SimpleError> {
+//     let timestamp = extract_timestamp(msg).unwrap().unwrap();
+//     let symbol = extract_symbol(msg).unwrap();
+
+//     let bboMsg = BboMsg {};
+
+//     return Ok(bboMsg);
+// }
