@@ -225,6 +225,7 @@ pub fn parse_bbo(
         "gate" => exchanges::gate::parse_bbo(market_type, msg, received_at),
         "okx" => exchanges::okx::parse_bbo(market_type, msg),
         "huobi" => exchanges::huobi::parse_bbo(market_type, msg, received_at),
+        "bitfinex" => exchanges::bitfinex::parse_bbo(market_type, msg, received_at),
         _ => Err(SimpleError::new(format!("Unknown exchange {}", exchange))),
     }
 }
@@ -281,7 +282,7 @@ pub fn parse_candlestick(
 ) -> Result<KlineMsg, SimpleError> {
     match exchange {
         "binance" => exchanges::binance::parse_candlestick(market_type, msg, msg_type),
-        // "bitfinex" => exchanges::bitfinex::parse_candlestick(market_type, msg),
+        "bitfinex" => exchanges::bitfinex::parse_candlestick(market_type, msg,msg_type),
         // "bitget" => exchanges::bitget::parse_candlestick(market_type, msg),
         // "bithumb" => exchanges::bithumb::parse_candlestick(market_type, msg),
         // "bitmex" => exchanges::bitmex::parse_candlestick(market_type, msg),
