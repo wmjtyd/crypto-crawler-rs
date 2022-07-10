@@ -1,12 +1,13 @@
 use crypto_market_type::MarketType;
 use crypto_msg_type::MessageType;
-
-use crypto_message::{Order, OrderBookMsg, TradeMsg, TradeSide};
+use chrono::Utc;
+use crypto_message::{Order, OrderBookMsg, TradeMsg, TradeSide, BboMsg};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use simple_error::SimpleError;
 use std::collections::HashMap;
+use super::{super::utils::calc_quantity_and_volume};
 
 use super::message::WebsocketMsg;
 
@@ -52,6 +53,29 @@ struct SpotL2TopKMsg {
     #[serde(flatten)]
     extra: HashMap<String, Value>,
 }
+
+// https://docs.kucoin.com/cn/#d1139053ae
+#[derive(Serialize, Deserialize)]
+#[allow(non_snake_case)]
+//"data":{
+//    "sequence":"1545896668986",
+//    "price":"0.08",
+//    "size":"0.011",
+//    "bestAsk":"0.08",
+//    "bestAskSize":"0.18",
+//    "bestBid":"0.049",
+//    "bestBidSize":"0.036"
+//}
+struct TickerRawMsg {
+    sequence: String,
+    price: String,
+    size: String,
+    bestAsk: String,
+    bestAskSize: String,
+    bestBid: String,
+    bestBidSize: String,
+}
+
 
 pub(super) fn parse_trade(msg: &str) -> Result<Vec<TradeMsg>, SimpleError> {
     let ws_msg = serde_json::from_str::<WebsocketMsg<SpotTradeMsg>>(msg).map_err(|_e| {
@@ -190,4 +214,69 @@ pub(super) fn parse_l2_topk(msg: &str) -> Result<Vec<OrderBookMsg>, SimpleError>
     };
 
     Ok(vec![orderbook])
+}
+
+pub(super) fn parse_ticker(
+    market_type: MarketType,
+    msg: &str,
+    received_at: Option<i64>,
+) 
+    -> Result<BboMsg, SimpleError> {
+    let ws_msg = serde_json::from_str::<WebsocketMsg<TickerRawMsg>>(msg).map_err(|_e| {
+        SimpleError::new(format!(
+            "Failed to deserialize {} to WebsocketMsg<SpotOrderbookMsg>", msg
+        ))
+    })?;
+
+
+    //debug_assert_eq!(ws_msg.subject, "level2");
+    //debug_assert!(ws_msg.topic.starts_with("/spotMarket/level2Depth5:"));
+    let mut symbol = ws_msg.subject; //.unwrap();
+    if symbol == "trade.ticker" {
+        if ws_msg.topic.contains(':') {
+            let vec: Vec<&str> = ws_msg.topic.split(':').collect();
+            symbol = vec.last().unwrap().to_string();
+        } 
+    }
+
+    let pair = crypto_pair::normalize_pair(symbol.as_str(), EXCHANGE_NAME).unwrap();
+    let timestamp = Utc::now().timestamp();
+
+
+    let (ask_quantity_base, ask_quantity_quote, ask_quantity_contract) = calc_quantity_and_volume(
+            EXCHANGE_NAME,
+            market_type,
+            &pair,
+            ws_msg.data.bestAsk.parse::<f64>().unwrap(),
+            ws_msg.data.bestAskSize.parse::<f64>().unwrap(),
+        );
+    
+        let (bid_quantity_base, bid_quantity_quote, bid_quantity_contract) = calc_quantity_and_volume(
+            EXCHANGE_NAME,
+            market_type,
+            &pair,
+            ws_msg.data.bestBid.parse::<f64>().unwrap(),
+            ws_msg.data.bestBidSize.parse::<f64>().unwrap(),
+        );
+    
+        let bbo_msg = BboMsg {
+            exchange: EXCHANGE_NAME.to_string(),
+            market_type,
+            symbol: symbol, //.to_string(),
+            pair,
+            msg_type: MessageType::BBO,
+            timestamp,
+            ask_price: ws_msg.data.bestAsk.parse::<f64>().unwrap(),
+            ask_quantity_base,
+            ask_quantity_quote,
+            ask_quantity_contract,
+            bid_price: ws_msg.data.bestBid.parse::<f64>().unwrap(),
+            bid_quantity_base,
+            bid_quantity_quote,
+            bid_quantity_contract,
+            id: Some(ws_msg.data.sequence.as_str().parse::<u64>().unwrap()),
+            json: msg.to_string(),
+        };
+        Ok(bbo_msg)
+
 }

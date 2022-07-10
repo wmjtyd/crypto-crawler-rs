@@ -2,6 +2,8 @@ mod utils;
 
 const EXCHANGE_NAME: &str = "kucoin";
 
+
+
 #[cfg(test)]
 mod trade {
     use super::EXCHANGE_NAME;
@@ -484,10 +486,18 @@ mod l2_topk {
 mod bbo {
     use super::EXCHANGE_NAME;
     use crypto_market_type::MarketType;
-    use crypto_msg_parser::{extract_symbol, extract_timestamp};
+    use crypto_msg_parser::{extract_symbol, extract_timestamp, parse_bbo};
+    use crypto_msg_type::MessageType;
+
+    const PRECISION: f64 = 1000000000.0; // 9 decimals
+    // temp copy from exchanges::utils, maybe find a way to import without copy past
+    pub fn round(f: f64) -> f64 {
+        (f * PRECISION).round() / PRECISION
+    }
 
     #[test]
     fn spot() {
+   
         let raw_msg = r#"{"type":"message","topic":"/market/ticker:BTC-USDT","subject":"trade.ticker","data":{"bestAsk":"31785.3","bestAskSize":"1.0455757","bestBid":"31785.2","bestBidSize":"0.4645037","price":"31785.2","sequence":"1630218274617","size":"0.03133705","time":1654032320677}}"#;
 
         assert_eq!(
@@ -500,6 +510,25 @@ mod bbo {
             "BTC-USDT",
             extract_symbol(EXCHANGE_NAME, MarketType::Spot, raw_msg).unwrap()
         );
+
+        //let received_at = None;
+        let bbo_msg =
+            parse_bbo(EXCHANGE_NAME, MarketType::Spot, raw_msg, None).unwrap();
+
+        //assert_eq!(MessageType::BBO, bbo_msg.msg_type);
+        assert_eq!("BTC-USDT", bbo_msg.symbol);
+        ////assert_eq!(received_at, bbo_msg.timestamp);
+        //assert_eq!(Some(19575390521), bbo_msg.id);
+
+        assert_eq!(31785.3, bbo_msg.ask_price);
+        assert_eq!(1.0455757, bbo_msg.ask_quantity_base);
+        assert_eq!(round(31785.3 * 1.0455757), bbo_msg.ask_quantity_quote);
+        assert_eq!(None, bbo_msg.ask_quantity_contract);
+
+        assert_eq!(31785.2, bbo_msg.bid_price);
+        assert_eq!(0.4645037, bbo_msg.bid_quantity_base);
+        assert_eq!(round(31785.2 * 0.4645037), bbo_msg.bid_quantity_quote);
+        assert_eq!(None, bbo_msg.bid_quantity_contract);
     }
 
     #[test]
@@ -532,6 +561,9 @@ mod bbo {
             "XBTMM22",
             extract_symbol(EXCHANGE_NAME, MarketType::InverseSwap, raw_msg).unwrap()
         );
+
+     
+
     }
 
     #[test]
