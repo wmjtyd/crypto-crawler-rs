@@ -2,6 +2,7 @@ use crypto_market_type::MarketType;
 use crypto_msg_type::MessageType;
 use chrono::Utc;
 use crypto_message::{Order, OrderBookMsg, TradeMsg, TradeSide, BboMsg, KlineMsg};
+use crate::extract_timestamp;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -337,6 +338,8 @@ pub(super) fn parse_candlestick(
     let close: f64 = obj.data.candles[2].parse().unwrap();
     let volume: f64 = obj.data.candles[5].parse().unwrap();
     let quote_volume: f64 = obj.data.candles[6].parse().unwrap();
+    let vec: Vec<&str> = obj.topic.split('_').collect();
+    let period: String = vec.last().unwrap().to_string();
 
 
     // obj.data.k
@@ -347,14 +350,19 @@ pub(super) fn parse_candlestick(
         symbol, // symbol: symbol,  symbol, //obj.data.symbol,
         pair,
         msg_type,
-        timestamp: obj.data.time,
+        timestamp: 
+        //obj.data.time, 
+        extract_timestamp(EXCHANGE_NAME, MarketType::Spot, msg)
+                .unwrap()
+                .unwrap(),
+        
         json: msg.to_string(),
         open,
         high,
         low,
         close,
         volume,
-        period: "".parse().unwrap(),
+        period: period,
         quote_volume: Some(quote_volume)
     };
 
