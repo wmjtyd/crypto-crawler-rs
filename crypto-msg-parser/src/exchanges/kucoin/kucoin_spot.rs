@@ -310,7 +310,7 @@ pub(super) fn parse_candlestick(
         ))
     })?;
 
-    let symbol = obj.data.symbol;
+    let symbol = obj.data.symbol.to_owned();
     let pair = crypto_pair::normalize_pair(&symbol, EXCHANGE_NAME).unwrap();
 
 //{
@@ -347,14 +347,13 @@ pub(super) fn parse_candlestick(
     let kline_msg = KlineMsg {
         exchange: EXCHANGE_NAME.to_string(),
         market_type,
-        symbol, // symbol: symbol,  symbol, //obj.data.symbol,
+        symbol: obj.data.symbol.to_owned(),
+        //symbol, // symbol: symbol,  symbol, //obj.data.symbol,
         pair,
         msg_type,
-        timestamp: 
-        //obj.data.time, 
-        extract_timestamp(EXCHANGE_NAME, MarketType::Spot, msg)
-                .unwrap()
-                .unwrap(),
+        timestamp: extract_timestamp(EXCHANGE_NAME, MarketType::Spot, msg)
+            .unwrap()
+            .unwrap(),
         
         json: msg.to_string(),
         open,
