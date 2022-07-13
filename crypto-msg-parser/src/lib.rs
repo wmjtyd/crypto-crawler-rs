@@ -281,7 +281,7 @@ pub fn parse_candlestick(
         "gate" => exchanges::gate::parse_candlestick(market_type, msg, msg_type),
         "huobi" => exchanges::huobi::parse_candlestick(market_type, msg, msg_type),
         // "kraken" => exchanges::kraken::parse_candlestick(market_type, msg),
-        // "kucoin" => exchanges::kucoin::parse_candlestick(market_type, msg),
+        "kucoin" => exchanges::kucoin::parse_candlestick(market_type, msg, msg_type),
         // "mxc" | "mexc" => exchanges::mexc::parse_candlestick(market_type, msg),
         // "okex" => exchanges::okex::parse_candlestick(market_type, msg),
         "okx" => exchanges::okx::parse_candlestick(market_type, msg, msg_type),
