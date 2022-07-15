@@ -11,7 +11,6 @@ keywords = ["cryptocurrency", "blockchain", "trading"]
 [dependencies]
 chrono = "0.4.19"
 crypto-contract-value = { path = "../crypto-contract-value" }
-crypto-msg-type = { path = "../crypto-msg-type" }
 crypto-pair = { path = "../crypto-pair" }
 if_chain = "1.0.2"
 once_cell = "1.13.0"
@@ -25,9 +24,13 @@ strum_macros = "0.24.2"
 [dependencies.crypto-message]
 version = "=1.0.2"
 git = "https://github.com/wmjtyd/crypto-crawler-rs"
-rev = "92aee0d37e228e53dd994a17058a7f819e005446"
+rev = "8914b2855b87397f82a14507a20a2094c1ab7891"
 
 [dependencies.crypto-market-type]
 version = "=1.1.1"
 git = "https://github.com/wmjtyd/crypto-crawler-rs"
-rev = "92aee0d37e228e53dd994a17058a7f819e005446"
+rev = "9c7cda9ab90c900c014566f9d279bef822cc37f1"
+
+[dependencies.crypto-msg-type]
+git = "https://github.com/wmjtyd/crypto-crawler-rs"
+rev = "9c7cda9ab90c900c014566f9d279bef822cc37f1"
