@@ -9,9 +9,13 @@ keywords = ["cryptocurrency", "blockchain", "trading"]
 
 
 [dependencies]
-crypto-market-type = { path = "../crypto-market-type" }
 crypto-msg-type = { path = "../crypto-msg-type" }
 serde = { version = "1.0.138", features = ["derive"] }
 serde_json = "1.0.82"
 strum = "0.24.1"
 strum_macros = "0.24.2"
+
+[dependencies.crypto-market-type]
+version = "=1.1.1"
+git = "https://github.com/wmjtyd/crypto-crawler-rs"
+rev = "92aee0d37e228e53dd994a17058a7f819e005446"

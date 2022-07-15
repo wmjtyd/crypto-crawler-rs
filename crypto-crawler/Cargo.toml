@@ -10,7 +10,6 @@ keywords = ["cryptocurrency", "blockchain", "trading"]
 
 [dependencies]
 crypto-markets = { path = "../crypto-markets" }
-crypto-market-type = { path = "../crypto-market-type" }
 crypto-msg-parser = { path = "../crypto-msg-parser" }
 crypto-msg-type = { path = "../crypto-msg-type" }
 crypto-pair = { path = "../crypto-pair" }
@@ -24,6 +23,12 @@ reqwest = { version = "0.11.11", features = ["blocking", "gzip"] }
 serde = { version = "1.0.138", features = ["derive"] }
 serde_json = "1.0.82"
 tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread", "sync", "time"] }
+
+
+[dependencies.crypto-market-type]
+version = "=1.1.1"
+git = "https://github.com/wmjtyd/crypto-crawler-rs"
+rev = "92aee0d37e228e53dd994a17058a7f819e005446"
 
 [dev_dependencies]
 env_logger = "0.9"
