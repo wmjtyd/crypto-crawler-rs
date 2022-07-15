@@ -14,3 +14,4 @@ pub(super) struct RestfulMsg<T: Sized> {
     pub code: String,
     pub data: T,
 }
+

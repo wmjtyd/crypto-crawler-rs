@@ -674,13 +674,15 @@ mod l3_event {
 mod candlestick {
     use super::EXCHANGE_NAME;
     use crypto_market_type::MarketType;
-    use crypto_msg_parser::{extract_symbol, extract_timestamp};
+    use crypto_msg_parser::{extract_symbol, extract_timestamp, parse_candlestick};
+    use crypto_msg_type::MessageType;
 
     #[test]
     fn spot() {
         let raw_msg = r#"{"type":"message","topic":"/market/candles:BTC-USDT_1week","subject":"trade.candles.update","data":{"symbol":"BTC-USDT","candles":["1653523200","29543.6","31613.8","32406.7","28014.1","93044.50911291","2792095272.950902197"],"time":1654081935182826588}}"#;
 
         assert_eq!(
+            //1654081935182826588
             1654081935182,
             extract_timestamp(EXCHANGE_NAME, MarketType::Spot, raw_msg)
                 .unwrap()
@@ -690,6 +692,12 @@ mod candlestick {
             "BTC-USDT",
             extract_symbol(EXCHANGE_NAME, MarketType::Spot, raw_msg).unwrap()
         );
+
+        let data = parse_candlestick(EXCHANGE_NAME, MarketType::Spot, raw_msg, MessageType::L2TopK).unwrap();
+
+        
+        assert_eq!(1654081935182, data.timestamp);
+        assert_eq!("1week", data.period);
     }
 
     #[test]

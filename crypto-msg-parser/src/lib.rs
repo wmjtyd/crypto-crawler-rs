@@ -1,6 +1,6 @@
 pub mod exchanges;
 use crypto_market_type::MarketType;
-use crypto_message::{BboMsg, FundingRateMsg, Order, OrderBookMsg, TradeMsg, KlineMsg};
+use crypto_message::{BboMsg, FundingRateMsg, Order, OrderBookMsg, TradeMsg, KlineMsg, TradeSide};
 use crypto_msg_type::MessageType;
 pub use exchanges::utils::round; // for test only
 use simple_error::SimpleError;
@@ -281,7 +281,7 @@ pub fn parse_candlestick(
         "gate" => exchanges::gate::parse_candlestick(market_type, msg, msg_type),
         "huobi" => exchanges::huobi::parse_candlestick(market_type, msg, msg_type),
         // "kraken" => exchanges::kraken::parse_candlestick(market_type, msg),
-        // "kucoin" => exchanges::kucoin::parse_candlestick(market_type, msg),
+        "kucoin" => exchanges::kucoin::parse_candlestick(market_type, msg, msg_type),
         // "mxc" | "mexc" => exchanges::mexc::parse_candlestick(market_type, msg),
         // "okex" => exchanges::okex::parse_candlestick(market_type, msg),
         "okx" => exchanges::okx::parse_candlestick(market_type, msg, msg_type),
