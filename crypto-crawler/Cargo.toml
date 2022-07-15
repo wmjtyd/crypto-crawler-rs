@@ -11,7 +11,6 @@ keywords = ["cryptocurrency", "blockchain", "trading"]
 [dependencies]
 crypto-markets = { path = "../crypto-markets" }
 crypto-msg-parser = { path = "../crypto-msg-parser" }
-crypto-msg-type = { path = "../crypto-msg-type" }
 crypto-pair = { path = "../crypto-pair" }
 crypto-rest-client = { path = "../crypto-rest-client" }
 crypto-ws-client = { path = "../crypto-ws-client" }
@@ -28,7 +27,11 @@ tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread", "sync", "
 [dependencies.crypto-market-type]
 version = "=1.1.1"
 git = "https://github.com/wmjtyd/crypto-crawler-rs"
-rev = "92aee0d37e228e53dd994a17058a7f819e005446"
+rev = "9c7cda9ab90c900c014566f9d279bef822cc37f1"
+
+[dependencies.crypto-msg-type]
+git = "https://github.com/wmjtyd/crypto-crawler-rs"
+rev = "9c7cda9ab90c900c014566f9d279bef822cc37f1"
 
 [dev_dependencies]
 env_logger = "0.9"

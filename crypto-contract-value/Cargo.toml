@@ -20,4 +20,4 @@ serde_json = "1.0.82"
 [dependencies.crypto-market-type]
 version = "=1.1.1"
 git = "https://github.com/wmjtyd/crypto-crawler-rs"
-rev = "92aee0d37e228e53dd994a17058a7f819e005446"
+rev = "9c7cda9ab90c900c014566f9d279bef822cc37f1"
