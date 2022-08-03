@@ -216,6 +216,7 @@ pub fn parse_bbo(
         "okx" => exchanges::okx::parse_bbo(market_type, msg),
         "huobi" => exchanges::huobi::parse_bbo(market_type, msg, received_at),
         "deribit" => exchanges::deribit::parse_bbo(market_type, msg, received_at),
+        "kucoin" => exchanges::kucoin::parse_bbo(market_type, msg, received_at),
         "kraken" => exchanges::kraken::parse_bbo(market_type, msg, received_at),
         _ => Err(SimpleError::new(format!("Unknown exchange {}", exchange))),
     }
@@ -280,7 +281,7 @@ pub fn parse_candlestick(
         "gate" => exchanges::gate::parse_candlestick(market_type, msg, msg_type),
         "huobi" => exchanges::huobi::parse_candlestick(market_type, msg, msg_type),
         // "kraken" => exchanges::kraken::parse_candlestick(market_type, msg),
-        // "kucoin" => exchanges::kucoin::parse_candlestick(market_type, msg),
+        "kucoin" => exchanges::kucoin::parse_candlestick(market_type, msg, msg_type),
         // "mxc" | "mexc" => exchanges::mexc::parse_candlestick(market_type, msg),
         // "okex" => exchanges::okex::parse_candlestick(market_type, msg),
         "okx" => exchanges::okx::parse_candlestick(market_type, msg, msg_type),
